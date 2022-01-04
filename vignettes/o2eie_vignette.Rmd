@@ -1,0 +1,209 @@
+---
+title: "o2eie_vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{o2eie_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(o2eie)
+
+# library(gptools)
+
+```
+
+```{r}
+
+weights <- list.files(system.file("inst/extdata", package = "o2eie"),
+                      pattern = "^w_.*\\.xlsx",
+                      full.names = T)
+
+o2meas <- o2_process_all(files = weights)
+
+o2meas %>% coldesc
+
+bas_report(o2meas, file = "bas.pdf")
+cmic_report(o2meas, file = "cmic.pdf")
+mgrow_report(data = o2meas, file = "mgro.pdf")
+
+o2meas %>% 
+  bas_report("bas.pdf") %>% 
+  cmic_report("cmic.pdf") %>% 
+  mgrow_report("mgrow.pdf")
+
+
+
+
+
+
+```
+
+```{r adjust-times}
+
+
+bas_corr <- tribble(
+    ~uID, ~times,
+    "170_01-1_24", 9:19,
+    "203_01-1_24", 43:53,
+    "701−2_24", 43:53,
+    
+    # late start
+    "034_01-1_24", 24:40,
+    "034_01-2_24", 24:40,
+   
+    "453_04-B_24", 25:35,
+  )
+
+o2meas <- o2meas %>%
+  set_bas_times(bas_corr) %>%
+  o2_bas(only_sets = TRUE)
+
+
+```
+
+
+```{r checks}
+
+# comments
+# duplicated + remeasurements
+
+# no weights
+summary %>% filter(is.na(wei_samp_dry))
+
+# pulse test
+summary %>% count(pulse_cmic_test)
+summary %>% count(pulse_cmic_max) %>% arrange(desc(pulse_cmic_max))
+
+
+# no BAS value: only if dried soil, OK
+summary %>% filter(is.na(basal))
+
+# no cmic value: 0, OK
+summary %>% filter(is.na(cmic)) #%>% View
+
+# qO2: OK
+summary %>% filter(is.na(qo2)) #%>% View
+
+
+# negative water content
+summary %>% pull(h2o_perc) %>% range
+summary %>% pull(h2o_perc) %>% hist
+summary %>% filter(h2o_perc < 0) #%>% View
+# NOTE fixed ~6 typos in the weighing sheets. Remaining values close to zero are 
+# probably due to very low water content and some soil loss during measurement
+summary <- summary %>% mutate(h2o_perc = if_else(h2o_perc < 0, 0, h2o_perc))
+
+
+# same lists for raw data: OK
+{ 
+  same_raw_fct <- function(bas, cmic) {
+    
+    if (length(bas) == length(cmic)) {
+      identical(bas, cmic)
+    } else {
+      FALSE
+    }
+    
+  }
+  
+  summary <- summary %>% mutate(same_raw = map2_lgl(bas_raw, cmic_raw, same_raw_fct))
+  summary %>% count(same_raw)
+  summary %>% filter(same_raw) #%>% View
+  summary %>% filter(same_raw) %>% pull(weight_file) %>% unique %>% sort
+}
+
+
+# no raw data values: OK
+{
+  all_na <- function(raw) {
+    all(is.na(raw))
+    
+  }
+  
+  summary <- summary %>% mutate(bas_allNA = map_lgl(bas_raw, all_na),
+                                cmic_allNA = map_lgl(cmic_raw, all_na))
+  
+  summary %>% count(bas_allNA)
+  summary %>% count(cmic_allNA)
+}
+
+
+# check extreme values ----------------------------------------------------
+# hist, range
+
+# basal
+var <- summary %>% pull(basal) %>% sort
+var %>% range(na.rm = TRUE)
+var %>% plot
+var %>% hist
+var %>% rev %>% .[1:20]
+
+summary %>% filter(basal > 15) %>% arrange(desc(basal)) #%>% View
+
+# NOTE CARE, basal value for 701-2_24 is huge! There is no typo from the weighing sheet
+
+summary %>% filter(uID == "701-2_24") %>% pull(pulse_bas_max)
+
+
+
+
+summary %>% pull(cmic) %>% range(na.rm = TRUE)
+summary %>% pull(cmic) %>% hist
+
+# zero values basal
+summary %>% filter(basal == 0) %>% #View
+  pull(uID)
+
+# same
+summary %>% filter(is.na(bas_cova)) %>%
+  pull(uID)
+
+summary$bas_cova %>% sort %>% plot
+summary %>% arrange(desc(bas_cova)) %>% head(20) %>% select(uID, basal, bas_cova)
+summary %>% arrange(desc(bas_cova)) %>% head(20) %>% View
+summary %>% arrange(desc(bas_cova)) %>% head(20) %>% pull(uID) %>% cat(sep = "\n")
+
+
+
+
+
+```
+
+
+
+```{r}
+# remeasurements
+# 
+
+
+isbd %>% filter(comment %>% str_detect("meas")) %>% #View
+  pull(comment) %>% unique
+
+# duplicated and remeasured: take later date
+(remeas <- intersect(reps, isbd %>% filter(comment %>% str_detect("meas")) %>% pull(uID)))
+
+# fct: remove first measurement
+rem_1meas <- function(data, uniID) {
+  
+  message(uniID)
+  
+  dates <- data %>% filter(uID == uniID) %>% pull(date_bas_meas)
+  
+  stopifnot(length(dates) == 2)
+
+  data %>% filter(!(uID == uniID & date_bas_meas == min(dates)))
+  
+}
+
+summary <- reduce(remeas, rem_1meas, .init = summary)
+```
+
