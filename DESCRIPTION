@@ -1,6 +1,6 @@
 Package: o2eie
 Title: Process Micro-compensation O2 data from the EIE lab.
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
     person("Guillaume", "Patoine", , "guillaume.patoine@idiv.de", role = c("aut", "cre"))
 Description: Process Micro-compensation O2 data from the EIE lab, calculates the main measurements and generates reports. 
