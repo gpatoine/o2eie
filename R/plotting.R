@@ -1,10 +1,14 @@
 
-# TODO maybe add the plotting functions directly inside the main functions
-# 
-
+#' Plot 1 Basal
+#'
+#' @param data data
+#' @param threshold numeric Value to cap y axis. 
+#'
+#' @return ggplot
+#' @export
 plot_1bas <- function(data, threshold = 3.2) {
   
-  bas_df <- tibble(bas_d = data$bas_diff[[1]],
+  bas_df <- dplyr::tibble(bas_d = data$bas_diff[[1]],
                    time = seq_along(bas_d))
   
   
@@ -16,10 +20,10 @@ plot_1bas <- function(data, threshold = 3.2) {
     
   }
   
-  bas_sub <- bas_df %>% filter(time %in% sel_times)
+  bas_sub <- bas_df %>% dplyr::filter(time %in% sel_times)
   
-  bmean <- bas_sub %>% pull(bas_d) %>% mean
-  bsd <- bas_sub %>% pull(bas_d) %>% sd
+  bmean <- bas_sub %>% dplyr::pull(bas_d) %>% mean
+  bsd <- bas_sub %>% dplyr::pull(bas_d) %>% sd
   
   ggplot(bas_df, aes(time, bas_d))+
     annotate(geom = "rect", xmin = min(bas_sub$time), xmax = max(bas_sub$time),
@@ -49,14 +53,14 @@ plot_1bas <- function(data, threshold = 3.2) {
 
 #' Create one plot of Cmic 
 #'
-#' @param data 
+#' @param data data
 #'
-#' @return ggplot object
+#' @return ggplot
 #' @export
 plot_1cmic <- function(data) {
   # data <- summary[1,]
   
-  cmic_df <- tibble(mirr_d = data$cmic_diff[[1]],
+  cmic_df <- dplyr::tibble(mirr_d = data$cmic_diff[[1]],
                     time = seq_along(mirr_d),
                     cmic_d = mirr_d * 0.7 * 38) %>% 
     filter(time < 25)
@@ -109,9 +113,9 @@ plot_1cmic <- function(data) {
 
 #' Create 1 mgrowth plot
 #'
-#' @param data 
+#' @param data data
 #'
-#' @return
+#' @return ggplot
 #' @export
 plot_1mgrowth <- function(data) {
   
@@ -148,14 +152,16 @@ plot_1mgrowth <- function(data) {
 }
 
 
-#' Create report
+#' Basal report
 #'
-#' Can be used with each specific measurement of basal, cmic and mgrowth
+#' Can be used with each specific measurement of basal, cmic and mgrowth.
+#' PDF format is recommended for saving multiple pages. Otherwise other `ggsave` formats should work, 
+#' but will only save the first page.
 #'
 #' @param data 
 #' @param file 
 #'
-#' @return
+#' @return data
 #' @export
 #'
 #' @examples
@@ -167,7 +173,7 @@ bas_report <- function(data, file) {
   
   if ("bas_plot" %in% names(data)) {
     
-    plots <- data %>% pull(bas_plot)
+    plots <- data %>% dplyr::pull(bas_plot)
     
   } else {
     
@@ -181,11 +187,23 @@ bas_report <- function(data, file) {
 
 }
 
+#' Cmic report
+#'
+#' Can be used with each specific measurement of basal, cmic and mgrowth.
+#' PDF format is recommended for saving multiple pages. Otherwise other `ggsave` formats should work, 
+#' but will only save the first page.
+#' 
+#' @rdname reports
+#' 
+#' @inheritParams bas_report
+#'
+#' @return data
+#' @export
 cmic_report <- function(data, file) {
   
   if ("cmic_plot" %in% names(data)) {
     
-    plots <- data %>% pull(cmic_plot)
+    plots <- data %>% dplyr::pull(cmic_plot)
     
   } else {
     
@@ -199,11 +217,21 @@ cmic_report <- function(data, file) {
   
 }
 
+#' Microbial growth report
+#'
+#' Can be used with each specific measurement of basal, cmic and mgrowth.
+#' PDF format is recommended for saving multiple pages. Otherwise other `ggsave` formats should work, 
+#' but will only save the first page.
+#'
+#' @inheritParams bas_report
+#'
+#' @return data
+#' @export
 mgrow_report <- function(data, file) {
   
   if("mgro_plot" %in% names(data)) {
     
-    plots <- data %>% pull(mgro_plot)
+    plots <- data %>% dplyr::pull(mgro_plot)
     
   } else {
     
@@ -220,6 +248,16 @@ mgrow_report <- function(data, file) {
 }
 
 
+#' Export report
+#'
+#' Mostly for internal use. Does the page layout and exports figures.
+#'
+#' @param plots list of ggplots
+#' @param file path
+#' @param plots_per_page 24
+#'
+#' @return
+#' @export
 export_report <- function(plots, file, plots_per_page = 24) {
   
   pl_c <- floor(sqrt(plots_per_page * 0.75))
@@ -234,5 +272,7 @@ export_report <- function(plots, file, plots_per_page = 24) {
          plot = gridExtra::marrangeGrob(grobs = sp2, nrow=1, ncol=1, left = "BAS", bottom = "time"),
          width = 210, height = 297,
          units = "mm")
+  
+  NULL
   
 }

@@ -17,9 +17,9 @@ use_gpl3_license()
 
 # functions scripts
 
-use_r("reading_data")
-use_r("calculate")
-use_r("plot")
+use_r("reading_writing")
+use_r("calculating")
+use_r("plotting")
 use_r("review")
 
 # TODO check o2_prepare_files and o2_calculation for vignette ideas and samples scripts
@@ -33,9 +33,7 @@ spell_check()
 build()
 tidy_dir("/R")
 
-
-
-
+use_version("patch")
 
 
 # add readme

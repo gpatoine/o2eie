@@ -14,196 +14,140 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(o2eie)
 
-# library(gptools)
+### Install the package from GitHub
+
+```{r eval=FALSE, include=FALSE}
+
+# remotes::install_github("gpatoine/o2eie")
+
 
 ```
 
-```{r}
 
+### Load in your session
+
+```{r setup}
+
+library(o2eie)
+
+
+```
+
+### Basic workflow
+
+The function `o2_process_all` will generate a tibble (similar to a data.frame) with all main measurements, including basal respiration, microbial biomass, and microbial growth in different columns. The function only requires a vector of weighing sheets.
+
+```{r}
 weights <- list.files(system.file("inst/extdata", package = "o2eie"),
                       pattern = "^w_.*\\.xlsx",
                       full.names = T)
 
 o2meas <- o2_process_all(files = weights)
 
-o2meas %>% coldesc
 
-bas_report(o2meas, file = "bas.pdf")
-cmic_report(o2meas, file = "cmic.pdf")
-mgrow_report(data = o2meas, file = "mgro.pdf")
 
+```
+
+
+### Reports
+
+It is recommended to review the datapoints used for basal respiration and cmic measurements for each sample. This can be done using PDF reports.
+
+```{r reports}
 o2meas %>% 
   bas_report("bas.pdf") %>% 
   cmic_report("cmic.pdf") %>% 
-  mgrow_report("mgrow.pdf")
-
-
-
-
+  mgrow_report("mgrowth.pdf")
 
 
 ```
+
+![basal respiration report](fig/bas.png)
+
+
+### Manually adjusting calculation periods
+
+Based on the reports, we can adjust the period considered for the calculation of basal respiration and microbial biomass. The easiest way to do this is a tibble that contains the new values. Be sure to use the columns "name_c" and "times", as shown below.
 
 ```{r adjust-times}
 
+adjust_bas <- tribble(
+  ~name_c, ~times,
+  "326_04_1", c(10:17, 19:20),
+  "121_2", c(25:35),
 
-bas_corr <- tribble(
-    ~uID, ~times,
-    "170_01-1_24", 9:19,
-    "203_01-1_24", 43:53,
-    "701−2_24", 43:53,
-    
-    # late start
-    "034_01-1_24", 24:40,
-    "034_01-2_24", 24:40,
-   
-    "453_04-B_24", 25:35,
-  )
+)
 
-o2meas <- o2meas %>%
-  set_bas_times(bas_corr) %>%
+o2meas <- o2meas %>% 
+  set_bas_times(tib = adjust_bas) %>% 
   o2_bas(only_sets = TRUE)
+
+o2meas %>% 
+  filter(name_c %in% adjust_bas$name_c) %>% 
+  select(name_c, bas_set)
+
+bas_report(o2meas, "bas2.pdf")
 
 
 ```
 
+### Example of additional checks
+
+Additional checks might be necessary to assure that the data is adequate.
 
 ```{r checks}
+library(dplyr)
 
 # comments
-# duplicated + remeasurements
+
+iris %>% as_tibble %>% filter(is.na(Sepal.Length))
 
 # no weights
-summary %>% filter(is.na(wei_samp_dry))
+any(is.na(o2meas$wei_samp_dry))
+
 
 # pulse test
-summary %>% count(pulse_cmic_test)
-summary %>% count(pulse_cmic_max) %>% arrange(desc(pulse_cmic_max))
+o2meas %>% count(pulse_cmic_test)
+o2meas %>% count(pulse_cmic_max) %>% arrange(desc(pulse_cmic_max))
 
 
-# no BAS value: only if dried soil, OK
-summary %>% filter(is.na(basal))
+# no BAS value
+o2meas %>% filter(is.na(basal))
 
-# no cmic value: 0, OK
-summary %>% filter(is.na(cmic)) #%>% View
+
+# no cmic value
+o2meas %>% filter(is.na(cmic)) #%>% View
 
 # qO2: OK
-summary %>% filter(is.na(qo2)) #%>% View
+o2meas %>% filter(is.na(qo2)) #%>% View
 
 
 # negative water content
-summary %>% pull(h2o_perc) %>% range
-summary %>% pull(h2o_perc) %>% hist
-summary %>% filter(h2o_perc < 0) #%>% View
-# NOTE fixed ~6 typos in the weighing sheets. Remaining values close to zero are 
-# probably due to very low water content and some soil loss during measurement
-summary <- summary %>% mutate(h2o_perc = if_else(h2o_perc < 0, 0, h2o_perc))
-
-
-# same lists for raw data: OK
-{ 
-  same_raw_fct <- function(bas, cmic) {
-    
-    if (length(bas) == length(cmic)) {
-      identical(bas, cmic)
-    } else {
-      FALSE
-    }
-    
-  }
-  
-  summary <- summary %>% mutate(same_raw = map2_lgl(bas_raw, cmic_raw, same_raw_fct))
-  summary %>% count(same_raw)
-  summary %>% filter(same_raw) #%>% View
-  summary %>% filter(same_raw) %>% pull(weight_file) %>% unique %>% sort
-}
-
-
-# no raw data values: OK
-{
-  all_na <- function(raw) {
-    all(is.na(raw))
-    
-  }
-  
-  summary <- summary %>% mutate(bas_allNA = map_lgl(bas_raw, all_na),
-                                cmic_allNA = map_lgl(cmic_raw, all_na))
-  
-  summary %>% count(bas_allNA)
-  summary %>% count(cmic_allNA)
-}
-
-
-# check extreme values ----------------------------------------------------
-# hist, range
-
-# basal
-var <- summary %>% pull(basal) %>% sort
-var %>% range(na.rm = TRUE)
-var %>% plot
-var %>% hist
-var %>% rev %>% .[1:20]
-
-summary %>% filter(basal > 15) %>% arrange(desc(basal)) #%>% View
-
-# NOTE CARE, basal value for 701-2_24 is huge! There is no typo from the weighing sheet
-
-summary %>% filter(uID == "701-2_24") %>% pull(pulse_bas_max)
-
-
-
-
-summary %>% pull(cmic) %>% range(na.rm = TRUE)
-summary %>% pull(cmic) %>% hist
-
-# zero values basal
-summary %>% filter(basal == 0) %>% #View
-  pull(uID)
-
-# same
-summary %>% filter(is.na(bas_cova)) %>%
-  pull(uID)
-
-summary$bas_cova %>% sort %>% plot
-summary %>% arrange(desc(bas_cova)) %>% head(20) %>% select(uID, basal, bas_cova)
-summary %>% arrange(desc(bas_cova)) %>% head(20) %>% View
-summary %>% arrange(desc(bas_cova)) %>% head(20) %>% pull(uID) %>% cat(sep = "\n")
-
-
-
-
+o2meas %>% pull(h2o_perc) %>% range
+o2meas %>% pull(h2o_perc) %>% hist
+o2meas %>% filter(h2o_perc < 0) #%>% View
+o2meas <- o2meas %>% mutate(h2o_perc = if_else(h2o_perc < 0, 0, h2o_perc))
 
 ```
 
 
+```{r no-raw}
 
-```{r}
-# remeasurements
-# 
-
-
-isbd %>% filter(comment %>% str_detect("meas")) %>% #View
-  pull(comment) %>% unique
-
-# duplicated and remeasured: take later date
-(remeas <- intersect(reps, isbd %>% filter(comment %>% str_detect("meas")) %>% pull(uID)))
-
-# fct: remove first measurement
-rem_1meas <- function(data, uniID) {
-  
-  message(uniID)
-  
-  dates <- data %>% filter(uID == uniID) %>% pull(date_bas_meas)
-  
-  stopifnot(length(dates) == 2)
-
-  data %>% filter(!(uID == uniID & date_bas_meas == min(dates)))
+# no raw data values: OK
+all_na <- function(raw) {
+  all(is.na(raw))
   
 }
 
-summary <- reduce(remeas, rem_1meas, .init = summary)
+o2meas <- o2meas %>% mutate(bas_allNA = map_lgl(bas_raw, all_na),
+                            cmic_allNA = map_lgl(cmic_raw, all_na))
+
+o2meas %>% count(bas_allNA)
+o2meas %>% count(cmic_allNA)
+
+
+
+
 ```
 

@@ -2,20 +2,20 @@
 % Please edit documentation in R/calculating.R
 \name{o2_corr_fct}
 \alias{o2_corr_fct}
-\title{Title}
+\title{Correction factors}
 \usage{
 o2_corr_fct(dev, seq, meas)
 }
 \arguments{
-\item{dev}{}
+\item{dev}{Device}
 
-\item{seq}{}
+\item{seq}{Sequence}
 
-\item{meas}{}
+\item{meas}{Measurements type. "bas" or "mic"}
 }
 \value{
-
+a number
 }
 \description{
-Title
+Returns the  correction factor from list
 }

@@ -30,16 +30,16 @@ o2_corr_factors <- function() {
 }
 
 
-#' Title
+#' Correction factors
+#' 
+#' Returns the  correction factor from list
+#' 
+#' @param dev Device
+#' @param seq Sequence
+#' @param meas Measurements type. "bas" or "mic"
 #'
-#' @param dev 
-#' @param seq 
-#' @param meas 
-#'
-#' @return
+#' @return a number
 #' @export
-#'
-#' @examples
 o2_corr_fct <- function(dev, seq, meas) {
   
   df <- o2_corr_factors() %>% dplyr::filter(device == dev,
@@ -63,8 +63,6 @@ o2_corr_fct <- function(dev, seq, meas) {
 #'
 #' @return tibble
 #' @export
-#'
-#' @examples
 o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names = "_", plot = FALSE) {
   #w_file <- weighing_files[3]
   # w_file <- path
@@ -229,12 +227,33 @@ o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names
 }
 
 
+#' Process all
+#' 
+#' Wrapper function to run all analyses with defaults
+#'
+#' @param files 
+#' @param raw_files 
+#' @param combine_names 
+#' @param plot 
+#'
+#' @return
+#' @export
 o2_process_all <- function(files, raw_files = "from_wei", combine_names = "_", plot = FALSE) {
   
   purrr::map_dfr(files, o2_process_from_table1, raw_files = raw_files, combine_names = combine_names, plot = plot)
   
 }
 
+
+#' Combine names
+#'
+#' @param n1 First name
+#' @param n2 Second name
+#' @param n3 Third name
+#' @param symbol Used to paste names together
+#'
+#' @return character
+#' @export
 combine_name <- function(n1, n2, n3, symbol = "_") {
   
   make_name <- function(names) {
@@ -278,6 +297,13 @@ combine_name <- function(n1, n2, n3, symbol = "_") {
 
 
 
+#' Calculate all
+#'
+#' @param data dataset
+#' @param plot logical
+#'
+#' @return tibble
+#' @export
 o2_calc_all <- function(data, plot = FALSE) {
   data %>% o2_bas(plot = plot) %>% o2_cmic(plot = plot) %>%
     dplyr::mutate(qo2 = basal / cmic) %>% 
@@ -287,16 +313,14 @@ o2_calc_all <- function(data, plot = FALSE) {
 
 
 # assumes columns wei_samp_dry, bas_raw(list), bas_start, bas_stop
-#' Title
+#' Calculate Basal
 #'
-#' @param data 
-#' @param plot
+#' @param data dataset
+#' @param plot logical
 #' @param only_sets logical if TRUE will only recalculate basal measurements for entries that have bas_set value
 #'
-#' @return
+#' @return tibble
 #' @export
-#'
-#' @examples
 o2_bas <- function(data, plot = FALSE, only_sets = FALSE) {
   # data <- weights2
   
@@ -415,6 +439,14 @@ o2_bas <- function(data, plot = FALSE, only_sets = FALSE) {
 }
 
 
+#' Calculate Cmic
+#'
+#' @param data dataset
+#' @param plot logical
+#' @param only_sets logical if TRUE will only recalculate basal measurements for entries that have bas_set value
+#'
+#' @return tibble
+#' @export
 o2_cmic <- function(data, plot = FALSE, only_sets = FALSE) {
   # data <- summary
   
@@ -517,19 +549,14 @@ o2_cmic <- function(data, plot = FALSE, only_sets = FALSE) {
 # microbial growth
 # slope of the log values CMIC hours 5 to 24?
 
-# summary %>% dplyr::slice(1:10) %>% slide(plot_1cmic) %>% plot_grid(plotlist = .)
-
 
 # for one row
-# return
-#' Title
+#' Prepare table for microbial growth calculation
 #'
-#' @param data 
+#' @param data dataset
 #'
-#' @return only values
+#' @return tibble
 #' @export
-#'
-#' @examples
 sel_mgrowth_df <- function(data) {
   
   # print(data$name_c)
@@ -628,8 +655,14 @@ sel_mgrowth_df <- function(data) {
 }
 
 
-
-
+#' Calculate Microbial growth
+#'
+#' @param data dataset
+#' @param plot logical
+#' @param only_sets logical if TRUE will only recalculate basal measurements for entries that have bas_set value
+#'
+#' @return tibble
+#' @export
 o2_mgrowth <- function(data, plot = FALSE) {
   # data <- summary[2,]
   # TODO get mirr times from cmic calculated to define first values used

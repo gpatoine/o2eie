@@ -7,10 +7,10 @@
 calc_hour_diffs(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{numeric}
 }
 \value{
-
+values
 }
 \description{
 Uses the difference between every fourth value, similar to calculations

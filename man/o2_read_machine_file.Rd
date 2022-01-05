@@ -10,7 +10,7 @@ o2_read_machine_file(path)
 \item{path}{to the file}
 }
 \value{
-
+tibble
 }
 \description{
 Read Machine File

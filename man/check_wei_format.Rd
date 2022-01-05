@@ -10,7 +10,7 @@ check_wei_format(path)
 \item{path}{}
 }
 \value{
-
+character indicating format used
 }
 \description{
 Either all in one ws or split on two

@@ -2,16 +2,16 @@
 % Please edit documentation in R/reading_writing.R
 \name{o2_raw_date}
 \alias{o2_raw_date}
-\title{Title}
+\title{Raw dates}
 \usage{
 o2_raw_date(file)
 }
 \arguments{
-\item{file}{}
+\item{file}{path}
 }
 \value{
-
+date
 }
 \description{
-Title
+Raw dates
 }

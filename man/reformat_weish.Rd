@@ -7,15 +7,17 @@
 reformat_weish(df, info = NULL, template = "iSBio")
 }
 \arguments{
-\item{df}{}
+\item{df}{data}
 
-\item{info}{}
+\item{info}{...}
 
-\item{template}{}
+\item{template}{file}
 }
 \value{
 
 }
 \description{
+Project specific, not needed
+NOTE: is template needed?
 Changed the weighing sheet format to match the template used
 }
