@@ -33,23 +33,11 @@ devtools::check()
 devtools::build_readme()
 devtools::build_vignettes()
 
-
 spell_check()
 build()
-tidy_dir("/R")
+# formatR::tidy_dir("/R")
 
 use_version("patch")
-
-
-
-
-
-
-# data --------------------------------------------------------------------
-
-
-# https://r-pkgs.org/data.html
-# system.file("extdata", "mtcars.csv", package = "readr")
 
 
 

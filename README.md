@@ -41,8 +41,8 @@ weights <- list.files(system.file("extdata", package = "o2eie"),
                       full.names = T)
 
 weights
-#> [1] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78944e3b5682/o2eie/extdata/w_DIETER_6391-6420_2019-11-26_Project1.xlsx"
-#> [2] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78944e3b5682/o2eie/extdata/w_DIETER_6661-6690_2020-02-10_Project1.xlsx"
+#> [1] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78947daf778/o2eie/extdata/w_DIETER_6391-6420_2019-11-26_Project1.xlsx"
+#> [2] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78947daf778/o2eie/extdata/w_DIETER_6661-6690_2020-02-10_Project1.xlsx"
 
 o2meas <- o2_process_all(files = weights)
 #> Processing w_DIETER_6391-6420_2019-11-26_Project1.xlsx
@@ -63,7 +63,7 @@ o2meas %>%
 
 For example, the PDF report for basal respiration looks like this:
 
-![basal respiration report](fig/bas.png)
+<img src="./fig/bas.png" width="90%" />
 
 ### Manually adjusting calculation periods
 
@@ -117,6 +117,11 @@ The report can then be generated again with the changes implemented.
 ``` r
 bas_report(o2meas, "bas_updated.pdf")
 ```
+
+## Vignette
+
+You can read the vignette with a slightly extended example: [o2eie
+vignette](https://htmlpreview.github.io/?https://raw.githubusercontent.com/gpatoine/o2eie/main/o2eie_vignette.html)
 
 Do not hesitate to contact me if you run into issues with the package or
 would like to adapt it to your use case.

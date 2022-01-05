@@ -66,7 +66,10 @@ o2meas %>%
 
 For example, the PDF report for basal respiration looks like this:
 
-![basal respiration report](fig/bas.png)
+```{r echo=FALSE, out.width='90%'}
+knitr::include_graphics('./fig/bas.png')
+
+```
 
 
 ### Manually adjusting calculation periods
@@ -101,6 +104,10 @@ The report can then be generated again with the changes implemented.
 bas_report(o2meas, "bas_updated.pdf")
 
 ```
+
+## Vignette
+
+You can read the vignette with a slightly extended example: [o2eie vignette](https://htmlpreview.github.io/?https://raw.githubusercontent.com/gpatoine/o2eie/main/o2eie_vignette.html)
 
 
 Do not hesitate to contact me if you run into issues with the package or would like to adapt it to your use case.

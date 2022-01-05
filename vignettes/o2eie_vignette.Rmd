@@ -15,55 +15,70 @@ knitr::opts_chunk$set(
 ```
 
 
-### Install the package from GitHub
+# o2eie
 
-```{r eval=FALSE, include=TRUE}
+The goal of o2eie is to provide an easy and consistent workflow for processing O2 data generated from the O2-microcompensation devices at the EIE labs.
+
+
+## Preparation
+
+To start you need to have all your weighing sheets formatted to make sure that the data can be read correctly. Use the template available in "template/w_template.xlsx" to align your entries properly. Be sure also to include the names of the raw data files (with extension) at the appropriate place and put all the files in the same folder.
+
+
+## Installation
+
+You can install the o2eie package from GitHub by running:
+
+``` r
 remotes::install_github("gpatoine/o2eie")
 
 ```
 
+## Example
 
-### Load in your session
+The easiest way to process all the files is using the function `o2_process_all()` which is a comprehensive wrapper for reading the data and calculating the main measurements. The function only requires a vector of weighing sheets, and it returns a tibble (a modern data.frame) with all raw values and derived measurements, including basal respiration, microbial biomass, and microbial growth.
 
-```{r setup}
+```{r example}
 library(o2eie)
 
-```
-
-### Basic workflow
-
-The function `o2_process_all` will generate a tibble (similar to a data.frame) with all main measurements, including basal respiration, microbial biomass, and microbial growth in different columns. The function only requires a vector of weighing sheets.
-
-```{r}
+# using the example dataset from the package, with two weighing sheets
 weights <- list.files(system.file("extdata", package = "o2eie"),
                       pattern = "^w_.*\\.xlsx",
                       full.names = T)
 
+weights
+
 o2meas <- o2_process_all(files = weights)
+
 
 ```
 
 
 ### Reports
 
-It is recommended to review the datapoints used for basal respiration and cmic measurements for each sample. This can be done using PDF reports.
+To review the datapoints used for individual measurements, it is possible to generate PDF reports with time series of incubation.
 
-```{r reports, echo = TRUE, eval = FALSE}
+``` r
 o2meas %>% 
   bas_report("bas.pdf") %>% 
   cmic_report("cmic.pdf") %>% 
   mgrow_report("mgrowth.pdf")
 
-
 ```
-```{r echo=FALSE, out.width='80%'}
+
+For example, the PDF report for basal respiration looks like this:
+
+```{r echo=FALSE, out.width='90%'}
 knitr::include_graphics('./fig/bas.png')
+
 ```
 
 
 ### Manually adjusting calculation periods
 
-Based on the reports, we can adjust the period considered for the calculation of basal respiration and microbial biomass. The easiest way to do this is a tibble that contains the new values. Be sure to use the columns "name_c" and "times", as shown below.
+It is often necessary to check the datapoints used for basal respiration and cmic measurements individually using the reports. In cases where the chosen timepoints are not satisfactory, we can adjust the period considered for the calculation of basal respiration and microbial biomass. The easiest way to do this is by creating a tibble with the function `tribble()` that contains the new values, with column names "name_c" and "times", as shown below, and use `set_bas_times()` or `set_cmic_times()` provided in the package.
+
+`o2_bas()` is used to recalculate the basal respiration and automatically uses the column "bas_set" (created by `set_bas_times()`) if it is available.
 
 ```{r adjust-times}
 library(dplyr)
@@ -80,29 +95,25 @@ o2meas <- o2meas %>%
   set_bas_times(tib = adjust_bas) %>% 
   o2_bas(only_sets = TRUE)
 
+# View the changes
 o2meas %>% 
   filter(name_c %in% adjust_bas$name_c) %>% 
   select(name_c, bas_set)
 ```
 
+The report can then be generated again with the changes implemented.
 
-```{r }
-bas_report(o2meas, "bas2.pdf")
 
+``` r
+bas_report(o2meas, "bas_updated.pdf")
 
 ```
 
-### Example of additional checks
+## Examples of additional checks
 
 Additional checks might be necessary to assure that the data is adequate.
 
 ```{r checks}
-
-
-# comments
-
-iris %>% as_tibble %>% filter(is.na(Sepal.Length))
-
 # no weights
 any(is.na(o2meas$wei_samp_dry))
 
@@ -133,8 +144,7 @@ o2meas <- o2meas %>% mutate(h2o_perc = if_else(h2o_perc < 0, 0, h2o_perc))
 
 
 ```{r no-raw}
-
-# no raw data values: OK
+# no raw data values
 all_na <- function(raw) {
   all(is.na(raw))
   
@@ -147,7 +157,11 @@ o2meas %>% count(bas_allNA)
 o2meas %>% count(cmic_allNA)
 
 
-
-
 ```
 
+
+
+Do not hesitate to contact me if you run into issues with the package or would like to adapt it to your use case.
+
+
+Contact: guillaume.patoine@idiv.de
