@@ -1,34 +1,39 @@
-
-# initial setup
-
+# is name available?
 library(available)
 available("o2eie")
 
+# Create package project
 # File => New Project => Package with git
 
 library(devtools)
+
 use_description()
 use_namespace()
-use_git() # only use once
-use_package("dplyr")
+use_git() # only run once
 use_pipe()
 use_gpl3_license()
 
 
 # functions scripts
-
 use_r("reading_writing")
 use_r("calculating")
 use_r("plotting")
 use_r("review")
 
-# TODO check o2_prepare_files and o2_calculation for vignette ideas and samples scripts
+# add readme + vignette
+use_readme_rmd()
+use_vignette("o2eie_vignette")
 
 
 # repeating workflow ------------------------------------------------------
 
-document()
-check()
+devtools::document()
+devtools::check()
+
+devtools::build_readme()
+devtools::build_vignettes()
+
+
 spell_check()
 build()
 tidy_dir("/R")
@@ -36,11 +41,7 @@ tidy_dir("/R")
 use_version("patch")
 
 
-# add readme
-use_readme_rmd()
-build_readme()
 
-use_vignette("o2eie_vignette")
 
 
 

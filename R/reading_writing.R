@@ -233,7 +233,8 @@ o2_raw_dates <- function(files) {
 
 #' Check weighing sheet format
 #' 
-#' Either all in one ws or split on two
+#' Either all in one ws (see w_template.xlsx) or split on two. If is two, the worksheets need to be labelled "info" and "data".
+#' 
 #'
 #' @param path 
 #'

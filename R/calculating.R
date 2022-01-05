@@ -133,8 +133,6 @@ o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names
     dplyr::mutate(name_c = combine_name(name1, name2, name3, combine_names),
                   .after = name3)
   
-  # TODO fix site names to remove NAs
-  
   
   # Dry weight calculation, equivalent to first tab of Excel file
   weights <- weights %>%
@@ -423,7 +421,7 @@ o2_bas <- function(data, plot = FALSE, only_sets = FALSE) {
   if (only_sets) {
     
     data2 <- left_join(name_cs, bind_rows(others, data2), by = "name_c")
-    data2 <- data2 %>% relocate("name_c", .after = all_of(nam_aft))
+    data2 <- data2 %>% dplyr::relocate("name_c", .after = dplyr::all_of(nam_aft))
     
   }
   
@@ -530,8 +528,8 @@ o2_cmic <- function(data, plot = FALSE, only_sets = FALSE) {
   
   if (only_sets) {
     
-    data2 <- left_join(name_cs, bind_rows(others, data2), by = "name_c")
-    data2 <- data2 %>% relocate("name_c", .after = all_of(nam_aft))
+    data2 <- left_join(name_cs, dplyr::bind_rows(others, data2), by = "name_c")
+    data2 <- data2 %>% dplyr::relocate("name_c", .after = dplyr::all_of(nam_aft))
     
   }
   
@@ -561,11 +559,11 @@ sel_mgrowth_df <- function(data) {
   
   # print(data$name_c)
   
-  cmic_df0 <- tibble(mirr_d = data$cmic_diff[[1]],
+  cmic_df0 <- dplyr::tibble(mirr_d = data$cmic_diff[[1]],
                      time = seq_along(mirr_d),
                      cmic_d = mirr_d * 0.7 * 38,
-                     incr = cmic_d - lag(cmic_d),
-                     incr2 = incr - lag(incr),
+                     incr = cmic_d - dplyr::lag(cmic_d),
+                     incr2 = incr - dplyr::lag(incr),
                      cmic_log = log10(cmic_d)) %>% 
     dplyr::filter(time < 20, time >3)
   

@@ -17,10 +17,8 @@ knitr::opts_chunk$set(
 
 ### Install the package from GitHub
 
-```{r eval=FALSE, include=FALSE}
-
-# remotes::install_github("gpatoine/o2eie")
-
+```{r eval=FALSE, include=TRUE}
+remotes::install_github("gpatoine/o2eie")
 
 ```
 
@@ -28,9 +26,7 @@ knitr::opts_chunk$set(
 ### Load in your session
 
 ```{r setup}
-
 library(o2eie)
-
 
 ```
 
@@ -45,8 +41,6 @@ weights <- list.files(system.file("extdata", package = "o2eie"),
 
 o2meas <- o2_process_all(files = weights)
 
-
-
 ```
 
 
@@ -54,7 +48,7 @@ o2meas <- o2_process_all(files = weights)
 
 It is recommended to review the datapoints used for basal respiration and cmic measurements for each sample. This can be done using PDF reports.
 
-```{r reports}
+```{r reports, echo = TRUE, eval = FALSE}
 o2meas %>% 
   bas_report("bas.pdf") %>% 
   cmic_report("cmic.pdf") %>% 
@@ -62,8 +56,9 @@ o2meas %>%
 
 
 ```
-
-![basal respiration report](fig/bas.png)
+```{r echo=FALSE, out.width='80%'}
+knitr::include_graphics('./fig/bas.png')
+```
 
 
 ### Manually adjusting calculation periods
@@ -71,6 +66,8 @@ o2meas %>%
 Based on the reports, we can adjust the period considered for the calculation of basal respiration and microbial biomass. The easiest way to do this is a tibble that contains the new values. Be sure to use the columns "name_c" and "times", as shown below.
 
 ```{r adjust-times}
+library(dplyr)
+library(purrr)
 
 adjust_bas <- tribble(
   ~name_c, ~times,
@@ -86,7 +83,10 @@ o2meas <- o2meas %>%
 o2meas %>% 
   filter(name_c %in% adjust_bas$name_c) %>% 
   select(name_c, bas_set)
+```
 
+
+```{r }
 bas_report(o2meas, "bas2.pdf")
 
 

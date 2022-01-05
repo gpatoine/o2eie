@@ -3,12 +3,17 @@
 
 # o2eie
 
-<!-- badges: start -->
-<!-- badges: end -->
-
 The goal of o2eie is to provide an easy and consistent workflow for
-processing O2 data generated from the O2-microcompensation labs from
-EIE.
+processing O2 data generated from the O2-microcompensation devices at
+the EIE labs.
+
+## Preparation
+
+To start you need to have all your weighing sheets formatted to make
+sure that the data can be read correctly. Use the template available in
+“template/w_template.xlsx” to align your entries properly. Be sure also
+to include the names of the raw data files (with extension) at the
+appropriate place and put all the files in the same folder.
 
 ## Installation
 
@@ -20,28 +25,24 @@ remotes::install_github("gpatoine/o2eie")
 
 ## Example
 
-This is a basic example which shows you how to use the package. The
-function `o2_process_all` will generate a tibble (similar to a
-data.frame) with all main measurements, including basal respiration,
-microbial biomass, and microbial growth in different columns. The
-function only requires a vector of weighing sheets.
+The easiest way to process all the files is using the function
+`o2_process_all()` which is a comprehensive wrapper for reading the data
+and calculating the main measurements. The function only requires a
+vector of weighing sheets, and it returns a tibble (a modern data.frame)
+with all raw values and derived measurements, including basal
+respiration, microbial biomass, and microbial growth.
 
 ``` r
 library(o2eie)
-#> Loading required package: dplyr
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-#> Loading required package: ggplot2
 
+# using the example dataset from the package, with two weighing sheets
 weights <- list.files(system.file("extdata", package = "o2eie"),
                       pattern = "^w_.*\\.xlsx",
                       full.names = T)
+
+weights
+#> [1] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78944e3b5682/o2eie/extdata/w_DIETER_6391-6420_2019-11-26_Project1.xlsx"
+#> [2] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78944e3b5682/o2eie/extdata/w_DIETER_6661-6690_2020-02-10_Project1.xlsx"
 
 o2meas <- o2_process_all(files = weights)
 #> Processing w_DIETER_6391-6420_2019-11-26_Project1.xlsx
@@ -50,58 +51,57 @@ o2meas <- o2_process_all(files = weights)
 
 ### Reports
 
-It is recommended to review the datapoints used for basal respiration
-and cmic measurements for each sample. This can be done using PDF
-reports.
+To review the datapoints used for individual measurements, it is
+possible to generate PDF reports with time series of incubation.
 
 ``` r
 o2meas %>% 
   bas_report("bas.pdf") %>% 
   cmic_report("cmic.pdf") %>% 
   mgrow_report("mgrowth.pdf")
-#> # A tibble: 23 x 46
-#>    idSequence channel device name1  name2 name3 name_c weight_file bas_file$...3
-#>    <chr>      <chr>   <chr>  <chr>  <chr> <chr> <chr>  <chr>       <chr>        
-#>  1 6391       1       DIETER 326_04 1     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  2 6392       2       DIETER 326_04 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  3 6393       3       DIETER 326_03 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  4 6394       4       DIETER 272_05 1     <NA>  272_0~ C:/Users/g~ bas_DIETER_6~
-#>  5 6395       5       DIETER 272_01 1     <NA>  272_0~ C:/Users/g~ bas_DIETER_6~
-#>  6 6396       6       DIETER 326_02 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  7 6397       7       DIETER 326_03 1     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  8 6398       8       DIETER 326_01 1     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  9 6399       9       DIETER 326_01 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#> 10 6400       10      DIETER 272_05 2     <NA>  272_0~ C:/Users/g~ bas_DIETER_6~
-#> # ... with 13 more rows, and 37 more variables: cmic_file <tibble[,1]>,
-#> #   wei_cont_empty <dbl>, wei_sample_fresh <dbl>, wei_cont_plus_samp_dry <dbl>,
-#> #   soil_type <chr>, glucose <dbl>, water_added <dbl>, date_sampling <chr>,
-#> #   comment <chr>, bas_start <dbl>, bas_stop <dbl>,
-#> #   wei_cont_plus_samp_fresh <dbl>, wei_samp_dry <dbl>, h2o_samp <dbl>,
-#> #   h2o_perc <dbl>, bas_raw <named list>, cmic_raw <named list>,
-#> #   date_bas_meas <date>, date_cmic_meas <date>, bas_corfct <dbl>, ...
 ```
+
+For example, the PDF report for basal respiration looks like this:
 
 ![basal respiration report](fig/bas.png)
 
 ### Manually adjusting calculation periods
 
-Based on the reports, we can adjust the period considered for the
-calculation of basal respiration and microbial biomass. The easiest way
-to do this is a tibble that contains the new values. Be sure to use the
-columns “name_c” and “times”, as shown below.
+It is often necessary to check the datapoints used for basal respiration
+and cmic measurements individually using the reports. In cases where the
+chosen timepoints are not satisfactory, we can adjust the period
+considered for the calculation of basal respiration and microbial
+biomass. The easiest way to do this is by creating a tibble with the
+function `tribble()` that contains the new values, with column names
+“name_c” and “times”, as shown below, and use `set_bas_times()` or
+`set_cmic_times()` provided in the package.
+
+`o2_bas()` is used to recalculate the basal respiration and
+automatically uses the column “bas_set” (created by `set_bas_times()`)
+if it is available.
 
 ``` r
+library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+
 adjust_bas <- tribble(
   ~name_c, ~times,
   "326_04_1", c(10:17, 19:20),
-  "121_2", c(25:35),
-
+  "121_2", c(25:35)
 )
 
 o2meas <- o2meas %>% 
   set_bas_times(tib = adjust_bas) %>% 
   o2_bas(only_sets = TRUE)
 
+# View the changes
 o2meas %>% 
   filter(name_c %in% adjust_bas$name_c) %>% 
   select(name_c, bas_set)
@@ -110,28 +110,15 @@ o2meas %>%
 #>   <chr>    <list>    
 #> 1 326_04_1 <int [10]>
 #> 2 121_2    <int [11]>
-
-bas_report(o2meas, "bas2.pdf")
-#> # A tibble: 23 x 47
-#>    idSequence channel device name1  name2 name3 name_c weight_file bas_file$...3
-#>    <chr>      <chr>   <chr>  <chr>  <chr> <chr> <chr>  <chr>       <chr>        
-#>  1 6391       1       DIETER 326_04 1     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  2 6392       2       DIETER 326_04 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  3 6393       3       DIETER 326_03 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  4 6394       4       DIETER 272_05 1     <NA>  272_0~ C:/Users/g~ bas_DIETER_6~
-#>  5 6395       5       DIETER 272_01 1     <NA>  272_0~ C:/Users/g~ bas_DIETER_6~
-#>  6 6396       6       DIETER 326_02 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  7 6397       7       DIETER 326_03 1     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  8 6398       8       DIETER 326_01 1     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#>  9 6399       9       DIETER 326_01 2     <NA>  326_0~ C:/Users/g~ bas_DIETER_6~
-#> 10 6400       10      DIETER 272_05 2     <NA>  272_0~ C:/Users/g~ bas_DIETER_6~
-#> # ... with 13 more rows, and 38 more variables: cmic_file <tibble[,1]>,
-#> #   wei_cont_empty <dbl>, wei_sample_fresh <dbl>, wei_cont_plus_samp_dry <dbl>,
-#> #   soil_type <chr>, glucose <dbl>, water_added <dbl>, date_sampling <chr>,
-#> #   comment <chr>, bas_start <dbl>, bas_stop <dbl>,
-#> #   wei_cont_plus_samp_fresh <dbl>, wei_samp_dry <dbl>, h2o_samp <dbl>,
-#> #   h2o_perc <dbl>, bas_raw <named list>, cmic_raw <named list>,
-#> #   date_bas_meas <date>, date_cmic_meas <date>, bas_corfct <dbl>, ...
 ```
+
+The report can then be generated again with the changes implemented.
+
+``` r
+bas_report(o2meas, "bas_updated.pdf")
+```
+
+Do not hesitate to contact me if you run into issues with the package or
+would like to adapt it to your use case.
 
 Contact: <guillaume.patoine@idiv.de>

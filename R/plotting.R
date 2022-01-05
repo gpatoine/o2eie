@@ -6,6 +6,7 @@
 #'
 #' @return ggplot
 #' @export
+#' @importFrom ggplot2 ggplot aes geom_point geom_line annotate ggtitle labs theme element_text theme_bw ylim
 plot_1bas <- function(data, threshold = 3.2) {
   
   bas_df <- dplyr::tibble(bas_d = data$bas_diff[[1]],
@@ -58,12 +59,11 @@ plot_1bas <- function(data, threshold = 3.2) {
 #' @return ggplot
 #' @export
 plot_1cmic <- function(data) {
-  # data <- summary[1,]
   
   cmic_df <- dplyr::tibble(mirr_d = data$cmic_diff[[1]],
-                    time = seq_along(mirr_d),
-                    cmic_d = mirr_d * 0.7 * 38) %>% 
-    filter(time < 25)
+                           time = seq_along(mirr_d),
+                           cmic_d = mirr_d * 0.7 * 38) %>% 
+    dplyr::filter(time < 25)
   
   
   sel_times <- if ("cmic_set" %in% names(data) && !is.na(data$cmic_set)) {
@@ -117,6 +117,7 @@ plot_1cmic <- function(data) {
 #'
 #' @return ggplot
 #' @export
+#' @importFrom ggplot2 geom_smooth xlim
 plot_1mgrowth <- function(data) {
   
   mgr <- data$mgrow_df[[1]]
@@ -183,7 +184,7 @@ bas_report <- function(data, file) {
   
   export_report(plots, file)
   
-  data
+  invisible(data)
 
 }
 
@@ -200,6 +201,7 @@ bas_report <- function(data, file) {
 #' @return data
 #' @export
 cmic_report <- function(data, file) {
+  # data <- o2meas
   
   if ("cmic_plot" %in% names(data)) {
     
@@ -213,9 +215,10 @@ cmic_report <- function(data, file) {
   
   export_report(plots, file)
   
-  data
+  invisible(data)
   
 }
+
 
 #' Microbial growth report
 #'
@@ -243,7 +246,7 @@ mgrow_report <- function(data, file) {
 
   export_report(plots, file)
   
-  data
+  invisible(data)
   
 }
 
@@ -258,6 +261,7 @@ mgrow_report <- function(data, file) {
 #'
 #' @return
 #' @export
+#' @importFrom ggplot2 ggsave
 export_report <- function(plots, file, plots_per_page = 24) {
   
   pl_c <- floor(sqrt(plots_per_page * 0.75))
