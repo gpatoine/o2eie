@@ -39,7 +39,7 @@ library(o2eie)
 The function `o2_process_all` will generate a tibble (similar to a data.frame) with all main measurements, including basal respiration, microbial biomass, and microbial growth in different columns. The function only requires a vector of weighing sheets.
 
 ```{r}
-weights <- list.files(system.file("inst/extdata", package = "o2eie"),
+weights <- list.files(system.file("extdata", package = "o2eie"),
                       pattern = "^w_.*\\.xlsx",
                       full.names = T)
 
@@ -97,7 +97,7 @@ bas_report(o2meas, "bas2.pdf")
 Additional checks might be necessary to assure that the data is adequate.
 
 ```{r checks}
-library(dplyr)
+
 
 # comments
 

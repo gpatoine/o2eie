@@ -9,7 +9,7 @@ available("o2eie")
 library(devtools)
 use_description()
 use_namespace()
-use_git()
+use_git() # only use once
 use_package("dplyr")
 use_pipe()
 use_gpl3_license()
