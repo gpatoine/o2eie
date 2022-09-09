@@ -13,5 +13,5 @@ check_wei_format(path)
 character indicating format used
 }
 \description{
-Either all in one ws or split on two
+Either all in one ws (see w_template.xlsx) or split on two. If is two, the worksheets need to be labelled "info" and "data".
 }

@@ -276,7 +276,7 @@ combine_name <- function(n1, n2, n3, symbol = "_") {
       
       if (!is.na(names[3])) {
         
-        cnam <- paste0(cnam, symbol, names[2])
+        cnam <- paste0(cnam, symbol, names[3])
         
       }
       

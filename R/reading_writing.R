@@ -81,6 +81,231 @@ calc_hour_diffs <- function(x) {
 }
 
 
+
+# automatic weighing sheet formatting -------------------------------------
+
+#' Reformat weighing sheet
+#'
+#' Updated based on current format used in 2022-09
+#'
+#' @param file path
+#'
+#' @return invisible(file)
+#' @export
+reformat_weighing_sheet <- function(file) {
+  
+  # check each tab
+  
+  tabs <- readxl::excel_sheets(file)
+  
+  # .x <- tabs[1]
+  walk(tabs, ~{
+    
+    message("Processing worksheet ", .x)
+    
+    wtab <- suppressMessages(
+      readxl::read_xlsx(file, sheet = .x, col_names = F, col_types = "text", )
+    )
+    
+    # in some case entries far down
+    checkmate::assert(nrow(wtab) == 32)
+    
+    # remove empty column
+    wtab <- wtab[!map_lgl(wtab, ~all(is.na(.x)))]
+    
+    create_weighing_sheet(wtab, basename(file), dirname(file))
+    
+  })
+  
+  invisible(file)
+  
+}
+
+
+
+#' Check if the format fits expectations
+#'
+#' Currently fairly conservative, would need to be adapted to fit more funky files
+#'
+#' @param ws data.frame
+#'
+#' @return logical
+#' @export
+check_w_format <- function(ws) {
+  # ws <- ws_all[[3]]
+  
+  
+  row1 <- c("laufende Nr.", "Kanal / Pott Nr.", NA, "Bezeichnung Probe", 
+            NA, NA, "Glasgefäß leer [g]", "Einwaage Frischgewicht [g]", "Einwaage Trockengewicht [g]", 
+            NA, NA, NA, NA, NA)
+  
+  row2 <- c(NA, NA, "Anlage", "Sample name 1", "Sample name 2", "Sample name 3", 
+            "Container empty [g]", "Sample fresh weight [g]", "Sample dry weight [g]", 
+            "glucose / sample [mg]", "water added / sample [ml]", "date of measurement", 
+            "date of sampling", "remarks")
+  
+  identical(as.character(ws[1,]), row1) & identical(as.character(ws[2,]), row2)
+  
+}
+
+
+#' Check if the data is empty
+#'
+#' @param ws data.frame containing weighing data
+#'
+#' @return logical
+#' @export
+check_empty <- function(ws) {
+  
+  needed_cols <- ws[2,] %in% c("Sample name 1", "Sample name 2", "Sample name 3", "Container empty [g]", 
+                               "Sample fresh weight [g]", "Sample dry weight [g]")
+  
+  # typically cols 4:9
+  # which(needed_cols)
+  
+  all(is.na(unlist(ws[3:32, needed_cols])))
+  
+}
+
+
+
+
+#' Create weighing sheet from dataframe
+#' 
+#' To be used to reformat weighing sheets.
+#'
+#' @param data data.frame
+#' @param input_name character file name
+#' @param output_dir path
+#'
+#' @return TRUE if file creation worked, NULL if the data is empty
+#' @export
+create_weighing_sheet <- function(data, input_name, output_dir) {
+  # data <- ws
+  
+  checkmate::assert(check_w_format(data))
+  
+  if (check_empty(data)) {
+    message("  Data is empty, no file was created")
+    return(invisible(NULL))
+    
+  }
+  
+  # data rows
+  dr <- nrow(data) %>% {(.-29):.}
+  
+  d_nams <- dplyr::coalesce(purrr::flatten_chr(data[2,]), purrr::flatten_chr(data[1,]))
+  
+  checkmate::assert(!any(duplicated(d_nams)))
+  
+  data_df <- data[dr,] %>% purrr::set_names(d_nams)
+  
+  # names(data_df) # %>% dput
+  
+  
+  # weighing sheet template
+  templ_path <- system.file("template", "w_template.xlsx", package = "o2eie")
+  
+  r_templ <- suppressMessages(
+    readxl::read_xlsx(templ_path, col_names = F, col_types = "text")
+  )
+  
+  header <- r_templ[3:4,] %>% purrr::set_names(r_templ[1,])
+  
+  content <- r_templ[8:nrow(r_templ),] %>% purrr::set_names(r_templ[6,])
+  
+  
+  ## fill header
+  
+  # RMS files need to be added manually
+  
+  # date
+  date1 <- data_df$`date of measurement` %>% {.[!. == "n/a"]} %>% unique
+  checkmate::assert(length(date1) == 1)
+  header$STARTDATE[1] <- openxlsx::convertToDate(date1) %>% as.character
+  
+  
+  ## fill content
+  
+  # machine
+  mach <- data_df$Anlage %>% {.[!. == "n/a"]} %>% unique
+  checkmate::assert(length(mach) == 1)
+  content$Device <- mach
+  
+  # Pot number should be 1:30
+  checkmate::assert(identical(data_df$`Kanal / Pott Nr.`, as.character(1:30)))
+  
+  # copy many columns
+  # names(content) %>% dput
+  
+  match_names <- tibble::tribble(
+    ~templ_name,                    ~ws_name,
+    "idSequence",              "laufende Nr.",
+    "Sample name 1",             "Sample name 1",
+    "Sample name 2",             "Sample name 2",
+    "Sample name 3",             "Sample name 3",
+    "Container empty [g]",       "Container empty [g]",
+    "Sample fresh weight [g]",   "Sample fresh weight [g]",
+    "Container + Sample dry weight [g]",     "Sample dry weight [g]",
+    "Glucose / sample [mg]",     "glucose / sample [mg]",
+    "Water added / sample [ml]", "water added / sample [ml]",
+    "Date sampling",          "date of sampling",
+    "Comments",                   "remarks"
+  )
+  
+  # TODO if needed, could subset df to existing columns
+  content[match_names$templ_name] <- data_df[match_names$ws_name]
+  
+  # replace n/a all columns
+  content <- purrr::map_dfc(content, ~if_else(.x == "n/a", NA_character_, .x))
+  
+  # fix date
+  content <- content %>% dplyr::mutate(`Date sampling` = openxlsx::convertToDate(`Date sampling`))
+  
+  # check if dry weights include glass container
+  dw <- as.numeric(content$`Container + Sample dry weight [g]`)
+  cw <- as.numeric(content$`Container empty [g]`)
+  
+  if(all(is.na(dw) | (dw < cw))) {
+    content <- content %>% dplyr::mutate(`Container + Sample dry weight [g]` = as.character(
+      as.numeric(`Container + Sample dry weight [g]`) + as.numeric(`Container empty [g]`)
+    ))
+    
+  } else if (!(all(is.na(dw) | (dw > cw)))) {
+    stop("Unclear if dry weights are with or without containers. Please check.")
+    
+  }
+  
+  
+  # columns to numeric
+  # content %>% names %>% dput
+  
+  content <- content %>% dplyr::mutate(dplyr::across(c(idSequence, `Container empty [g]`, `Sample fresh weight [g]`,
+                                                       `Container + Sample dry weight [g]`, `Glucose / sample [mg]`,
+                                                       `Water added / sample [ml]`), as.numeric))
+  
+  ## write to workbook and save
+  wb_templ <- openxlsx::loadWorkbook(templ_path)
+  
+  # write header and content
+  openxlsx::writeData(wb_templ, "Data", header, startCol = 1, startRow = 3, colNames = FALSE)
+  openxlsx::writeData(wb_templ, "Data", content, startCol = 1, startRow = 8, colNames = FALSE)
+  
+  # openXL(wb_templ)
+  
+  
+  # file name
+  # w_machine_originalfile
+  output_name <- paste0("w_", mach, "_", input_name %>% str_remove("^(pre_)?w_"))
+  file_created <- openxlsx::saveWorkbook(wb_templ, file.path(output_dir, output_name), 
+                                         returnValue = TRUE, overwrite = TRUE)
+  
+  invisible(file_created)
+  
+}
+
+
+
 #' Reformat weighing sheet
 #'
 #' Project specific, not needed
