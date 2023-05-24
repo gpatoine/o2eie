@@ -205,8 +205,8 @@ o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names
   
   # Process measurements as in Excel sheet ----------------------------------
   
-  weights2 <- weights %>% dplyr::mutate(bas_raw = bas_raw0 %>% dplyr::select(-c(1,2)) %>% purrr::map(~.x),
-                                        cmic_raw = cmic_raw0 %>% dplyr::select(-c(1,2)) %>% purrr::map(~.x),
+  weights2 <- weights %>% dplyr::mutate(bas_raw = bas_raw0 %>% dplyr::select(-c(1,2)) %>% purrr::map(~as.numeric(.x)),
+                                        cmic_raw = cmic_raw0 %>% dplyr::select(-c(1,2)) %>% purrr::map(~as.numeric(.x)),
                                         date_bas_meas = date_bas,
                                         date_cmic_meas = date_cmic)
   
@@ -344,6 +344,8 @@ o2_bas <- function(data, plot = FALSE, only_sets = FALSE) {
   # add machine correction factor
   data <- data %>% dplyr::mutate(bas_corfct = purrr::map2_dbl(device, idSequence, ~ o2_corr_fct(.x, .y, meas = "bas")),
                                  bas_raw_st = purrr::map2(bas_raw, bas_corfct,  ~ .x * .y))
+  
+  data
   
   
   # multiply by ratio already
