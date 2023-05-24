@@ -45,7 +45,7 @@ o2_corr_fct <- function(dev, seq, meas) {
   df <- o2_corr_factors() %>% dplyr::filter(device == dev,
                                             meas_type == meas)
   
-  right_row <- which(slider::slide_lgl(df, ~ dplyr::between(seq, .x$from_seq, .x$to_seq)))
+  right_row <- which(slider::slide_lgl(df, ~ dplyr::between(as.numeric(seq), .x$from_seq, .x$to_seq)))
   
   stopifnot(length(right_row) == 1)
   
