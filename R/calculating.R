@@ -676,6 +676,9 @@ o2_mgrowth <- function(data, plot = FALSE) {
       NA
       
     } else {
+      
+      data <- data %>% mutate(cmic_log = if_else(cmic_log == -Inf, NA, cmic_log))
+      
       coef(lm(cmic_log ~ time, data = data))[2]
       
     }
