@@ -109,8 +109,8 @@ o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names
   # fiddle selection + column names
   weights <- weights0 %>% 
     dplyr::mutate(weight_file = w_file0,
-                  bas_file = weights_check[3,3],
-                  cmic_file = weights_check[4,3]) %>% 
+                  bas_file = unlist(weights_check[3,3]),
+                  cmic_file = unlist(weights_check[4,3])) %>%
     dplyr::select(idSequence,
                   channel = Channel,
                   device = Device,
