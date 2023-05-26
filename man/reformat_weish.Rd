@@ -13,9 +13,6 @@ reformat_weish(df, info = NULL, template = "iSBio")
 
 \item{template}{file}
 }
-\value{
-
-}
 \description{
 Project specific, not needed
 NOTE: is template needed?

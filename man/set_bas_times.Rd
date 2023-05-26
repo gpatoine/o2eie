@@ -11,9 +11,6 @@ set_bas_times(data, tib)
 
 \item{tib}{tibble with columns "name_c" and "times".}
 }
-\value{
-
-}
 \description{
 Adjust the calculation period for soil basal respiration manually.
 The column "times" in tib should be a vector of full hours to select

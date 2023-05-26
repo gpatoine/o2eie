@@ -20,9 +20,6 @@ o2_process_all(
 
 \item{plot}{}
 }
-\value{
-
-}
 \description{
 Wrapper function to run all analyses with defaults
 }

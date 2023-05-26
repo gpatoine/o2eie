@@ -40,7 +40,7 @@ set_bas_times <- function(data, tib) {
   # TODO add method to work with device*seq
 
   # error if many entries selected
-  unique_name <- purrr::map_lgl(tib[,1] %>% unlist, ~ sum(.x == data$name_c) <= 1)
+  unique_name <- purrr::map_lgl(unlist(tib[,1]), ~ sum(.x == data$name_c) <= 1)
   assertthat::assert_that(all(unique_name))
   
   data <- data %>% dplyr::mutate(bas_set = purrr::map(name_c, get_set_times, tib = tib))
@@ -60,8 +60,8 @@ set_bas_times <- function(data, tib) {
 set_cmic_times <- function(data, tib) {
 
   # error if many entries selected
-  duplicated_name <- purrr::map_lgl(tib[,1], ~ sum(.x == data$name_c) <= 1)
-  assertthat::assert_that(all(!duplicated_name))
+  unique_name <- purrr::map_lgl(unlist(tib[,1]), ~ sum(.x == data$name_c) <= 1)
+  assertthat::assert_that(all(unique_name))
     
   data <- data %>% dplyr::mutate(cmic_set = purrr::map(name_c, get_set_times, tib = tib))
   

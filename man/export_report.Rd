@@ -13,9 +13,6 @@ export_report(plots, file, plots_per_page = 24)
 
 \item{plots_per_page}{24}
 }
-\value{
-
-}
 \description{
 Mostly for internal use. Does the page layout and exports figures.
 }
