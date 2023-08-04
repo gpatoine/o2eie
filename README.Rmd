@@ -36,10 +36,23 @@ remotes::install_github("gpatoine/o2eie")
 
 The easiest way to process all the files is using the function `o2_process_all()` which is a comprehensive wrapper for reading the data and calculating the main measurements. The function only requires a vector of weighing sheets, and it returns a tibble (a modern data.frame) with all raw values and derived measurements, including basal respiration, microbial biomass, and microbial growth.
 
-```{r example}
+```{r lib}
 library(o2eie)
+```
 
-# using the example dataset from the package, with two weighing sheets
+Normally, you can write the file paths manually, or for example use all the Excel files from a folder using `list.files()`.
+
+```{r, eval=F, echo=T}
+
+weights <- list.files("myfolder", pattern = "\\.xlsx", full.names = T)
+
+
+```
+
+In this case, we are using the example dataset from the package, with two weighing sheets. We use regular expressions to find the weighing sheets that start with a "w" and end with ".xlsx".
+
+```{r example}
+
 weights <- list.files(system.file("extdata", package = "o2eie"),
                       pattern = "^w_.*\\.xlsx",
                       full.names = T)

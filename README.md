@@ -34,15 +34,29 @@ respiration, microbial biomass, and microbial growth.
 
 ``` r
 library(o2eie)
+```
 
-# using the example dataset from the package, with two weighing sheets
+Normally, you can write the file paths manually, or for example use all
+the Excel files from a folder using `list.files()`.
+
+``` r
+
+weights <- list.files("myfolder", pattern = "\\.xlsx", full.names = T)
+```
+
+In this case, we are using the example dataset from the package, with
+two weighing sheets. We use regular expressions to find the weighing
+sheets that start with a “w” and end with “.xlsx”.
+
+``` r
+
 weights <- list.files(system.file("extdata", package = "o2eie"),
                       pattern = "^w_.*\\.xlsx",
                       full.names = T)
 
 weights
-#> [1] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78947daf778/o2eie/extdata/w_DIETER_6391-6420_2019-11-26_Project1.xlsx"
-#> [2] "C:/Users/gp63dyte/AppData/Local/Temp/RtmpE9KGIo/temp_libpath78947daf778/o2eie/extdata/w_DIETER_6661-6690_2020-02-10_Project1.xlsx"
+#> [1] "C:/Users/gp63dyte/R/win-library/4.2/o2eie/extdata/w_DIETER_6391-6420_2019-11-26_Project1.xlsx"
+#> [2] "C:/Users/gp63dyte/R/win-library/4.2/o2eie/extdata/w_DIETER_6661-6690_2020-02-10_Project1.xlsx"
 
 o2meas <- o2_process_all(files = weights)
 #> Processing w_DIETER_6391-6420_2019-11-26_Project1.xlsx
@@ -82,6 +96,7 @@ if it is available.
 
 ``` r
 library(dplyr)
+#> Warning: package 'dplyr' was built under R version 4.2.3
 #> 
 #> Attaching package: 'dplyr'
 #> The following objects are masked from 'package:stats':
@@ -105,7 +120,7 @@ o2meas <- o2meas %>%
 o2meas %>% 
   filter(name_c %in% adjust_bas$name_c) %>% 
   select(name_c, bas_set)
-#> # A tibble: 2 x 2
+#> # A tibble: 2 × 2
 #>   name_c   bas_set   
 #>   <chr>    <list>    
 #> 1 326_04_1 <int [10]>

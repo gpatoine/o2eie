@@ -76,7 +76,7 @@ calc_hour_diffs <- function(x) {
   
   vals <- c(0, vals)
   
-  (vals - lag(vals))[-1]
+  (vals - dplyr::lag(vals))[-1]
   
 }
 

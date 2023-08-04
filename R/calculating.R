@@ -107,7 +107,7 @@ o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names
   # purrr::map_dfc(~parse_guess(.x)) #better to specify, but could guess using this
   
   # fiddle selection + column names
-  weights <- weights0 %>% 
+  weights1 <- weights0 %>% 
     dplyr::mutate(weight_file = w_file0,
                   bas_file = unlist(weights_check[3,3]),
                   cmic_file = unlist(weights_check[4,3])) %>%
@@ -135,7 +135,7 @@ o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names
   
   
   # Dry weight calculation, equivalent to first tab of Excel file
-  weights <- weights %>%
+  weights1 <- weights1 %>%
     dplyr::mutate(
       # Container + sample fresh weight [g]
       wei_cont_plus_samp_fresh = wei_cont_empty + wei_sample_fresh,
@@ -205,7 +205,7 @@ o2_process_from_table1 <- function(w_file, raw_files = "from_wei", combine_names
   
   # Process measurements as in Excel sheet ----------------------------------
   
-  weights2 <- weights %>% dplyr::mutate(bas_raw = bas_raw0 %>% dplyr::select(-c(1,2)) %>% purrr::map(~as.numeric(.x)),
+  weights2 <- weights1 %>% dplyr::mutate(bas_raw = bas_raw0 %>% dplyr::select(-c(1,2)) %>% purrr::map(~as.numeric(.x)),
                                         cmic_raw = cmic_raw0 %>% dplyr::select(-c(1,2)) %>% purrr::map(~as.numeric(.x)),
                                         date_bas_meas = date_bas,
                                         date_cmic_meas = date_cmic)
@@ -677,7 +677,7 @@ o2_mgrowth <- function(data, plot = FALSE) {
       
     } else {
       
-      data <- data %>% mutate(cmic_log = if_else(cmic_log == -Inf, NA, cmic_log))
+      data <- data %>% dplyr::mutate(cmic_log = dplyr::if_else(cmic_log == -Inf, NA, cmic_log))
       
       coef(lm(cmic_log ~ time, data = data))[2]
       
