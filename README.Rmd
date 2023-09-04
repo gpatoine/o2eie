@@ -20,7 +20,7 @@ The goal of o2eie is to provide an easy and consistent workflow for processing O
 
 ## Preparation
 
-To start you need to have all your weighing sheets formatted to make sure that the data can be read correctly. Use the template available in "template/w_template.xlsx" to align your entries properly. Be sure also to include the names of the raw data files (with extension) at the appropriate place and put all the files in the same folder.
+To start you need to have all your weighing sheets formatted to make sure that the data can be read correctly. Use the template available in "inst/template/w_template.xlsx" to align your entries properly. Be sure also to include the names of the raw data files (with extension) at the appropriate place and put all the files in the same folder.
 
 
 ## Installation

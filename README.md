@@ -11,8 +11,8 @@ the EIE labs.
 
 To start you need to have all your weighing sheets formatted to make
 sure that the data can be read correctly. Use the template available in
-“template/w_template.xlsx” to align your entries properly. Be sure also
-to include the names of the raw data files (with extension) at the
+“inst/template/w_template.xlsx” to align your entries properly. Be sure
+also to include the names of the raw data files (with extension) at the
 appropriate place and put all the files in the same folder.
 
 ## Installation
@@ -55,8 +55,8 @@ weights <- list.files(system.file("extdata", package = "o2eie"),
                       full.names = T)
 
 weights
-#> [1] "C:/Users/gp63dyte/R/win-library/4.2/o2eie/extdata/w_DIETER_6391-6420_2019-11-26_Project1.xlsx"
-#> [2] "C:/Users/gp63dyte/R/win-library/4.2/o2eie/extdata/w_DIETER_6661-6690_2020-02-10_Project1.xlsx"
+#> [1] "C:/Users/gp63dyte/R/win-library/4.3/o2eie/extdata/w_DIETER_6391-6420_2019-11-26_Project1.xlsx"
+#> [2] "C:/Users/gp63dyte/R/win-library/4.3/o2eie/extdata/w_DIETER_6661-6690_2020-02-10_Project1.xlsx"
 
 o2meas <- o2_process_all(files = weights)
 #> Processing w_DIETER_6391-6420_2019-11-26_Project1.xlsx
@@ -96,7 +96,6 @@ if it is available.
 
 ``` r
 library(dplyr)
-#> Warning: package 'dplyr' was built under R version 4.2.3
 #> 
 #> Attaching package: 'dplyr'
 #> The following objects are masked from 'package:stats':
